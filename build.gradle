@@ -6,7 +6,9 @@ buildscript {
 }
 
 plugins {
+    id "io.freefair.lombok" version "3.6.4"
     id 'io.ratpack.ratpack-java' version '1.6.1'
+    id 'groovy'
     id 'idea'
 }
 
@@ -22,8 +24,11 @@ sourceCompatibility = 12
 mainClassName = 'pl.dorzak.moneytransferservice.MoneyTransferServiceStartup'
 
 
+
 dependencies {
     implementation 'com.typesafe:config:1.3.4'
     runtime 'org.slf4j:slf4j-simple:1.7.25'
+    compile "org.codehaus.groovy:groovy-all:2.5.7"
+    testCompile "org.spockframework:spock-core:1.3-groovy-2.5"
 }
 

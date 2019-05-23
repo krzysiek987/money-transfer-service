@@ -29,3 +29,9 @@ hs_err_pid*
 #Gradle files
 .gradle
 gradle/wrapper/gradle-wrapper.jar
+
+#Build output
+build
+
+#Lombok generated files
+lombok.config
