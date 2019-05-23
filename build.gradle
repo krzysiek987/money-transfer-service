@@ -1,0 +1,29 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'io.ratpack.ratpack-java' version '1.6.1'
+    id 'idea'
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+
+group 'pl.dorzak'
+version '1.0.0-SNAPSHOT'
+sourceCompatibility = 12
+mainClassName = 'pl.dorzak.moneytransferservice.MoneyTransferServiceStartup'
+
+
+dependencies {
+    implementation 'com.typesafe:config:1.3.4'
+    runtime 'org.slf4j:slf4j-simple:1.7.25'
+}
+
