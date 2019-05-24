@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-class DataSourceConfig {
+public class DataSourceConfig {
 
 	private static final String DATA_SOURCE_CONFIG_SECTION = "dataSource";
 
@@ -26,7 +26,7 @@ class DataSourceConfig {
 	private String username;
 	private String password;
 
-	static DataSourceConfig createFrom(Config config) {
+	public static DataSourceConfig createFrom(Config config) {
 		return ConfigBeanFactory.create(config.getConfig(DATA_SOURCE_CONFIG_SECTION), DataSourceConfig.class);
 	}
 }
