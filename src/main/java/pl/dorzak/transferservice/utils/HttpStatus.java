@@ -1,4 +1,4 @@
-package pl.dorzak.transactionservice.utils;
+package pl.dorzak.transferservice.utils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

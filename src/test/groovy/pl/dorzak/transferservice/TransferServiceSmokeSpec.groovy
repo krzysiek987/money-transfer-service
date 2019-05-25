@@ -1,10 +1,10 @@
-package pl.dorzak.transactionservice
+package pl.dorzak.transferservice
 
 
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse.BodyHandlers
 
-class TransactionServiceSmokeSpec extends BaseTransactionServiceSpec {
+class TransferServiceSmokeSpec extends BaseTransferServiceSpec {
 
     def "should expose api on given port"() {
         given:

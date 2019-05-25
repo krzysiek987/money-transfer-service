@@ -1,4 +1,4 @@
-package pl.dorzak.transactionservice.utils;
+package pl.dorzak.transferservice.utils;
 
 import java.net.URI;
 import java.util.ArrayList;

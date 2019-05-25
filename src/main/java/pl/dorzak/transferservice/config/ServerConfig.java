@@ -1,4 +1,4 @@
-package pl.dorzak.transactionservice.config;
+package pl.dorzak.transferservice.config;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigBeanFactory;

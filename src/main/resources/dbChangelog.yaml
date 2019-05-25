@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      context: install
+      author: Krzysztof Dorzak <k.dorzak@gmailcom>
+      changes:
+        - sql:
+            comment: Create transfers table
+            sql: |
+              CREATE TABLE transfers
+              (
+                  id         uuid default random_uuid(),
+                  status     text not null,
+                  source_account_id uuid not null,
+                  destination_account_id uuid not null,
+                  amount decimal not null,
+                  currency varchar(3) not null,
+                  title text,
+                  created_at timestamp not null,
+                  updated_at timestamp,
+                  scheduled_at timestamp,
+                  invoked_at timestamp,
+                  primary key (id)
+              )
+  - changeSet:
+      id: 2
+      context: test-data
+      author: Krzysztof Dorzak <k.dorzak@gmailcom>
+      changes:
+        - sql:
+            comment: Insert few test transfers
+            sql: |
+              INSERT INTO transfers(id, status, source_account_id, destination_account_id, amount, currency, created_at) VALUES
+              ('31a17d04-741f-4b3d-af78-e5be263743a1', 'PENDING', '64daa53d-10c9-4f1b-92c4-63c543823da6', '436ad3d0-f9f8-480c-8350-27314179bd54', 15.01, 'PLN', '2008-01-01 00:00:01'),
+              ('400a020a-b8f4-467c-8337-763ec892aeee', 'PENDING', '64daa53d-10c9-4f1b-92c4-63c543823da6', '436ad3d0-f9f8-480c-8350-27314179bd54', 100.0, 'PLN', '2008-01-01 00:00:01'),
+              ('beeaedce-12b8-4739-8904-bb5c53acc32c', 'PENDING', '64daa53d-10c9-4f1b-92c4-63c543823da6', 'cbd807b1-98b6-4f68-9168-110c60988d8a', 2.50, 'PLN', '2008-01-01 00:00:01'),
+              ('1d0f8741-aeb8-4dd6-9faf-f7289636a042', 'PENDING', '64daa53d-10c9-4f1b-92c4-63c543823da6', '84e10d96-d746-488e-854a-1a834ce5cdc2', 1.53, 'PLN', '2008-01-01 00:00:01');

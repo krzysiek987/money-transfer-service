@@ -1,16 +1,16 @@
-package pl.dorzak.transactionservice
+package pl.dorzak.transferservice
 
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
-import pl.dorzak.transactionservice.utils.HttpHeaders
-import pl.dorzak.transactionservice.utils.HttpStatus
+import pl.dorzak.transferservice.utils.HttpHeaders
+import pl.dorzak.transferservice.utils.HttpStatus
 
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse.BodyHandlers
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-class TransferApiSpec extends BaseTransactionServiceSpec {
+class TransferApiSpec extends BaseTransferServiceSpec {
 
     private static final String TRANSFER_API = "transfers"
     private static final String API_VERSION = "1.0"
