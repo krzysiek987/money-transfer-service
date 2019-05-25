@@ -12,7 +12,8 @@ import java.time.ZonedDateTime
 
 class TransferApiSpec extends BaseTransactionServiceSpec {
 
-    public static final String TRANSFER_API = "transfers"
+    private static final String TRANSFER_API = "transfers"
+    private static final String API_VERSION = "1.0"
 
     def "should return all transfers by account"() {
         given:
@@ -281,11 +282,11 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
     }
 
     private def getTransferApiUriBuilder() {
-        return getServerUrBuilder().pathSegment(TRANSFER_API)
+        return getServerUrBuilder().pathSegment(API_VERSION).pathSegment(TRANSFER_API)
     }
 
 
     private def createTransferForAccount(final UUID sourceAccountId, final String status = 'PENDING') {
-        //TODO: initialize data here
+        return UUID.randomUUID()
     }
 }

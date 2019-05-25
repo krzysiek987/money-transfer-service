@@ -17,13 +17,18 @@ public class TransactionService {
 	private final RatpackServer server;
 
 	public TransactionService(final ServerConfig serverConfig, final TransferModule transferModule) throws Exception {
-		server = RatpackServer.of(definition -> definition
-				.serverConfig(configBuilder -> configBuilder
-						.port(serverConfig.getPort())
-				)
-				.handlers(chain -> chain
-						.get("health", ctx -> ctx.render("UP"))
-				)
+		server = RatpackServer.of(definition ->
+				definition
+						.serverConfig(configBuilder -> configBuilder
+								.port(serverConfig.getPort())
+						)
+						.handlers(
+								chain -> {
+									chain
+											.get("health", ctx -> ctx.render("UP"));
+									transferModule.visit(chain);
+								}
+						)
 		);
 	}
 
