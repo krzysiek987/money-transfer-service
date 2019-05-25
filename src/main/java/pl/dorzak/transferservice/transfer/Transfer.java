@@ -9,6 +9,9 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
+/**
+ * Transfer entity. Things like update or completion timestamp were intentionally omitted.
+ */
 @Value
 @Builder(toBuilder = true)
 public class Transfer {
@@ -29,10 +32,6 @@ public class Transfer {
 	private String title;
 	@NonNull
 	private Instant createdAt;
-
-	private Instant updatedAt;
-
-	private Instant invokedAt;
 
 	private Instant scheduledAt;
 

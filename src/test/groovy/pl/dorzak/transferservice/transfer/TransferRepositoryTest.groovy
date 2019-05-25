@@ -16,9 +16,9 @@ class TransferRepositoryTest extends Specification {
         this.transferRepository = new TransferRepository(dataSource)
     }
 
-    def "findByTransactionTypeAndSourceAccountId should return filtered transfers"() {
+    def "findBySourceAccountId should return filtered transfers"() {
         given:
-        def accountId = UUID.fromString('b0fa49a2-54d7-4a06-a569-f40f082f8dd7')
+        def accountId = UUID.fromString('64daa53d-10c9-4f1b-92c4-63c543823da6')
         def expectedTransferIds = ['31a17d04-741f-4b3d-af78-e5be263743a1', '400a020a-b8f4-467c-8337-763ec892aeee', 'beeaedce-12b8-4739-8904-bb5c53acc32c']
         when:
         def transfers = transferRepository.findBySourceAccountId(accountId)
@@ -29,59 +29,61 @@ class TransferRepositoryTest extends Specification {
 
     }
 
-    def "findById should return transfer with proper id"() {
+    def "findById should return transfer with proper amount"() {
         given:
         def transferId = UUID.fromString('400a020a-b8f4-467c-8337-763ec892aeee')
         when:
         def transfer = transferRepository.findById(transferId)
         then:
-        transfer != null
+        transfer.isPresent()
         and:
-        transfer.amount == BigDecimal.valueOf(100.0)
+        transfer.get().amount == BigDecimal.valueOf(100.0)
     }
 
-    def "save should insert transfer when it was missing"() {
+    def "should insert transfer and generate it's id"() {
         given:
         def transferToInsert = Transfer.builder()
                 .status(TransferStatus.PENDING)
                 .sourceAccountId(UUID.fromString('b8cca210-eaa4-4a7b-91d6-36195a2f2106'))
                 .destinationAccountId(UUID.fromString('42aa7c50-05da-4a13-952c-ebc8cb12dbac'))
                 .amount(BigDecimal.valueOf(1.10))
-                .currency(Currency.getInstance('EUR'))
+                .currency(Currency.getInstance('USD'))
                 .createdAt(Instant.ofEpochMilli(1558808555000L))
                 .build()
 
         when:
-        def insertedTransfer = transferRepository.save(transferToInsert)
+        def insertedTransfer = transferRepository.insert(transferToInsert)
 
         then:
         insertedTransfer != null
         and:
-        transferRepository.findById(insertedTransfer.getId()) == insertedTransfer
+        insertedTransfer.id != null
+        and:
+        transferRepository.findById(insertedTransfer.getId()).get() == insertedTransfer
 
         cleanup:
         transferRepository.deleteById(insertedTransfer.getId())
     }
 
-    def "save should update transfer when it was present"() {
+    def "should update transfer"() {
         given:
         def transferId = UUID.fromString('beeaedce-12b8-4739-8904-bb5c53acc32c')
-        def existingTransfer = transferRepository.findById(transferId)
+        def existingTransfer = transferRepository.findById(transferId).get()
         def updateRequest = existingTransfer.toBuilder()
                 .amount(BigDecimal.valueOf(150.55))
                 .status(TransferStatus.FINISHED)
                 .build()
 
         when:
-        def updatedTransfer = transferRepository.save(updateRequest)
+        def updatedTransfer = transferRepository.update(updateRequest)
 
         then:
         updateRequest == updatedTransfer
         and:
-        transferRepository.findById(transferId) == updatedTransfer
+        transferRepository.findById(transferId).get() == updatedTransfer
 
         cleanup:
-        transferRepository.save(existingTransfer)
+        transferRepository.update(existingTransfer)
     }
 
     def "deleteById "() {
@@ -90,15 +92,15 @@ class TransferRepositoryTest extends Specification {
         def existingTransfer = transferRepository.findById(transferId)
 
         expect:
-        existingTransfer != null
+        existingTransfer.isPresent()
 
         when:
         transferRepository.deleteById(transferId)
 
         then:
-        transferRepository.findById(transferId) == null
+        !transferRepository.findById(transferId).isPresent()
 
         cleanup:
-        transferRepository.save(existingTransfer)
+        transferRepository.insert(existingTransfer.get())
     }
 }
