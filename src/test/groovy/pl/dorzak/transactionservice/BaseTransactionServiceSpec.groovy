@@ -4,6 +4,7 @@ import com.typesafe.config.ConfigFactory
 import pl.dorzak.transactionservice.config.DataSourceFactory
 import pl.dorzak.transactionservice.config.ServerConfig
 import pl.dorzak.transactionservice.transfer.TransferModule
+import pl.dorzak.transactionservice.utils.UriBuilder
 import spock.lang.Specification
 
 import java.net.http.HttpClient
@@ -33,16 +34,16 @@ abstract class BaseTransactionServiceSpec extends Specification {
 
     def cleanup() {
         if (service == null) {
-            throw new NullPointerException("Something went wrong. Service is null which is unexpected")
+            throw new NullPointerException('Something went wrong. Service is null which is unexpected')
         }
         service.stop()
     }
 
-    protected String getServerUrl() {
-        return "http://localhost:" + serverConfig.getPort()
+    def getServerUrBuilder() {
+        return new UriBuilder('http', 'localhost', serverConfig.getPort())
     }
 
-    private static int getAnyAvailablePort() {
+    def getAnyAvailablePort() {
         return new ServerSocket(0).withCloseable { socket -> socket.getLocalPort() }
     }
 }

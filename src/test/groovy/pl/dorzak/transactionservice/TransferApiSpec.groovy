@@ -1,6 +1,5 @@
 package pl.dorzak.transactionservice
 
-
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import pl.dorzak.transactionservice.utils.HttpHeaders
@@ -25,7 +24,7 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
         createTransferForAccount otherAccountId
 
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + TRANSFER_API + "?account_id=" + accountId))
+                .uri(getTransferApiUriBuilder().queryParam('account_id', accountId).build())
                 .GET()
                 .build()
 
@@ -38,14 +37,13 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
         (new JsonSlurper().parseText(response.body()) as List).size() == 3
     }
 
-
     def "should return specific transfer by id"() {
         given:
         def accountId = UUID.randomUUID()
         def transferId = createTransferForAccount accountId
 
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + TRANSFER_API + "/" + transferId))
+                .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
                 .GET()
                 .build()
 
@@ -72,7 +70,7 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
             title 'Dummy'
         }
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + TRANSFER_API))
+                .uri(getTransferApiUriBuilder().build())
                 .header(HttpHeaders.CONTENT_TYPE, HttpHeaders.CONTENT_JSON)
                 .POST(HttpRequest.BodyPublishers.ofString(requestBodyBuilder.toString()))
                 .build()
@@ -100,7 +98,7 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
             title 'Dummy'
         }
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + TRANSFER_API))
+                .uri(getTransferApiUriBuilder().build())
                 .header(HttpHeaders.CONTENT_TYPE, HttpHeaders.CONTENT_JSON)
                 .POST(HttpRequest.BodyPublishers.ofString(requestBodyBuilder.toString()))
                 .build()
@@ -123,7 +121,7 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
             title 'Dummy'
         }
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + TRANSFER_API))
+                .uri(getTransferApiUriBuilder().build())
                 .header(HttpHeaders.CONTENT_TYPE, HttpHeaders.CONTENT_JSON)
                 .POST(HttpRequest.BodyPublishers.ofString(requestBodyBuilder.toString()))
                 .build()
@@ -147,7 +145,7 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
             scheduleAt ZonedDateTime.of(2019, 5, 24, 23, 0, 0, 0, ZoneId.of("Europe/Warsaw"))
         }
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + TRANSFER_API))
+                .uri(getTransferApiUriBuilder().build())
                 .header(HttpHeaders.CONTENT_TYPE, HttpHeaders.CONTENT_JSON)
                 .POST(HttpRequest.BodyPublishers.ofString(requestBodyBuilder.toString()))
                 .build()
@@ -178,7 +176,7 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
         }
 
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + TRANSFER_API + "/" + transferId))
+                .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
                 .PUT(HttpRequest.BodyPublishers.ofString(requestBodyBuilder.toString()))
                 .build()
 
@@ -203,7 +201,7 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
         }
 
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + TRANSFER_API + "/" + transferId))
+                .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
                 .PUT(HttpRequest.BodyPublishers.ofString(requestBodyBuilder.toString()))
                 .build()
 
@@ -223,7 +221,7 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
         UUID transferId = createTransferForAccount UUID.randomUUID(), 'FAILED'
 
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + TRANSFER_API + "/" + transferId))
+                .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
                 .DELETE()
                 .build()
 
@@ -239,7 +237,7 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
         UUID transferId = createTransferForAccount UUID.randomUUID(), 'SCHEDULED'
 
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + TRANSFER_API + "/" + transferId))
+                .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
                 .DELETE()
                 .build()
 
@@ -255,7 +253,7 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
         UUID transferId = createTransferForAccount UUID.randomUUID(), 'COMPLETED'
 
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + TRANSFER_API + "/" + transferId))
+                .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
                 .DELETE()
                 .build()
 
@@ -271,7 +269,7 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
         UUID transferId = createTransferForAccount UUID.randomUUID(), 'COMPLETED'
 
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + TRANSFER_API + "/" + transferId))
+                .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
                 .DELETE()
                 .build()
 
@@ -280,6 +278,10 @@ class TransferApiSpec extends BaseTransactionServiceSpec {
 
         then:
         response.statusCode() == HttpStatus.FORBIDDEN
+    }
+
+    private def getTransferApiUriBuilder() {
+        return getServerUrBuilder().pathSegment(TRANSFER_API)
     }
 
 

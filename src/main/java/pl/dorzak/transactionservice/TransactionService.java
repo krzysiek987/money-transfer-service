@@ -10,7 +10,7 @@ import ratpack.server.RatpackServer;
 
 /**
  * Initializes APIs and all necessary components like HTTP server.
- * This is main entry point to microservice.
+ * This is main entry point to the microservice.
  */
 public class TransactionService {
 

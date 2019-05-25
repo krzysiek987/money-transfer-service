@@ -9,7 +9,7 @@ class TransactionServiceSmokeSpec extends BaseTransactionServiceSpec {
     def "should expose api on given port"() {
         given:
         def httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(getServerUrl() + "/" + "health"))
+                .uri(getServerUrBuilder().pathSegment("health").build())
                 .build()
         when:
         def response = httpClient.send(httpRequest, BodyHandlers.ofString())
