@@ -2,15 +2,18 @@ package pl.dorzak.transferservice
 
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
+import pl.dorzak.transferservice.transfer.TransferDao
+import pl.dorzak.transferservice.transfer.model.TransferStatus
 import pl.dorzak.transferservice.utils.HttpHeaders
 import pl.dorzak.transferservice.utils.HttpStatus
 
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse.BodyHandlers
-import java.time.ZoneId
+import java.time.Instant
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
-class TransferApiSpec extends BaseTransferServiceSpec {
+class TransferApiITSpec extends BaseITSpec {
 
     private static final String TRANSFER_API = "transfers"
     private static final String API_VERSION = "1.0"
@@ -25,7 +28,7 @@ class TransferApiSpec extends BaseTransferServiceSpec {
         createTransferForAccount otherAccountId
 
         def httpRequest = HttpRequest.newBuilder()
-                .uri(getTransferApiUriBuilder().queryParam('account_id', accountId).build())
+                .uri(getTransferApiUriBuilder().queryParam('sourceAccountId', accountId).build())
                 .GET()
                 .build()
 
@@ -55,19 +58,18 @@ class TransferApiSpec extends BaseTransferServiceSpec {
         response.statusCode() == HttpStatus.OK
         and:
         with(new JsonSlurper().parseText(response.body())) {
-            status == 'PENDING'
-            title == 'something'
+            status == 'SUCCESS'
         }
     }
 
-    def "should create pending transfer"() {
+    def "should create success transfer"() {
         given:
         def requestBodyBuilder = new JsonBuilder() {}
         requestBodyBuilder {
-            sourceAccountId UUID.randomUUID()
-            destinationAccountId UUID.randomUUID()
-            amount '12.53'
-            currency 'USD'
+            sourceAccountId UUID.fromString('d6896820-7f3e-11e9-b475-0800200c9a66')
+            destinationAccountId UUID.fromString('f18e5e50-7f3e-11e9-b475-0800200c9a66')
+            value '12.53'
+            currency 'PLN'
             title 'Dummy'
         }
         def httpRequest = HttpRequest.newBuilder()
@@ -78,23 +80,26 @@ class TransferApiSpec extends BaseTransferServiceSpec {
 
         when:
         def response = httpClient.send(httpRequest, BodyHandlers.ofString())
+        def responseBody = new JsonSlurper().parseText(response.body())
 
         then:
         response.statusCode() == HttpStatus.CREATED
         and:
-        with(new JsonSlurper().parseText(response.body())) {
-            status == "PENDING"
+        with(responseBody) {
+            status == "SUCCESS"
+            title == 'Dummy'
         }
         and:
-        response.headers().firstValue(HttpHeaders.LOCATION).get().startsWith getServerUrl() + "/" + TRANSFER_API
+        response.headers().firstValue(HttpHeaders.LOCATION).get() == 'http://localhost:' + serverConfig.getPort() + '/1.0/transfers/' + responseBody.id
     }
 
-    def "should reject create request without amount"() {
+
+    def "should reject create request without value"() {
         given:
         def requestBodyBuilder = new JsonBuilder() {}
         requestBodyBuilder {
-            sourceAccountId UUID.randomUUID()
-            destinationAccountId UUID.randomUUID()
+            sourceAccountId UUID.fromString('d6896820-7f3e-11e9-b475-0800200c9a66')
+            destinationAccountId UUID.fromString('f18e5e50-7f3e-11e9-b475-0800200c9a66')
             currency 'USD'
             title 'Dummy'
         }
@@ -111,13 +116,13 @@ class TransferApiSpec extends BaseTransferServiceSpec {
         response.statusCode() == HttpStatus.BAD_REQUEST
     }
 
-    def "transfer should fail for incorrect account"() {
+    def "transfer should fail when negative value"() {
         given:
         def requestBodyBuilder = new JsonBuilder() {}
         requestBodyBuilder {
-            sourceAccountId UUID.randomUUID()
-            destinationAccountId UUID.randomUUID()
-            amount '12.53'
+            sourceAccountId UUID.fromString('d6896820-7f3e-11e9-b475-0800200c9a66')
+            destinationAccountId UUID.fromString('f18e5e50-7f3e-11e9-b475-0800200c9a66')
+            value '-12.53'
             currency 'USD'
             title 'Dummy'
         }
@@ -138,12 +143,12 @@ class TransferApiSpec extends BaseTransferServiceSpec {
         given:
         def requestBodyBuilder = new JsonBuilder() {}
         requestBodyBuilder {
-            sourceAccountId UUID.randomUUID()
-            destinationAccountId UUID.randomUUID()
-            amount '12.53'
-            currency 'USD'
+            sourceAccountId UUID.fromString('d6896820-7f3e-11e9-b475-0800200c9a66')
+            destinationAccountId UUID.fromString('f18e5e50-7f3e-11e9-b475-0800200c9a66')
+            value '12.53'
+            currency 'PLN'
             title 'Dummy'
-            scheduleAt ZonedDateTime.of(2019, 5, 24, 23, 0, 0, 0, ZoneId.of("Europe/Warsaw"))
+            scheduledAt ZonedDateTime.now().plusSeconds(10).format(DateTimeFormatter.ISO_DATE_TIME)
         }
         def httpRequest = HttpRequest.newBuilder()
                 .uri(getTransferApiUriBuilder().build())
@@ -158,68 +163,45 @@ class TransferApiSpec extends BaseTransferServiceSpec {
         response.statusCode() == HttpStatus.CREATED
         and:
         with(new JsonSlurper().parseText(response.body())) {
-            status == "SCHEDULED"
+            status == 'SCHEDULED'
+            currency == 'PLN'
         }
     }
 
-    def "should update scheduled transfer amount"() {
+    def "should update scheduled transfer value and title"() {
         given:
-        UUID transferId = createTransferForAccount UUID.randomUUID(), 'SCHEDULED'
+        def accountId = UUID.randomUUID()
+        UUID transferId = createTransferForAccount accountId, TransferStatus.SCHEDULED, ZonedDateTime.now().plusSeconds(5)
 
         def requestBodyBuilder = new JsonBuilder() {}
         requestBodyBuilder {
-            sourceAccountId accountId
-            destinationAccountId UUID.randomUUID()
-            amount '999.53'
-            currency 'USD'
+            status 'SCHEDULED'
+            value '999.53'
             title 'Dummy'
-            scheduleAt ZonedDateTime.of(2019, 5, 24, 23, 0, 0, 0, ZoneId.of("Europe/Warsaw"))
+            scheduledAt ZonedDateTime.now().plusSeconds(10).format(DateTimeFormatter.ISO_DATE_TIME)
         }
 
         def httpRequest = HttpRequest.newBuilder()
                 .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
+                .header(HttpHeaders.CONTENT_TYPE, HttpHeaders.CONTENT_JSON)
                 .PUT(HttpRequest.BodyPublishers.ofString(requestBodyBuilder.toString()))
                 .build()
 
         when:
         def response = httpClient.send(httpRequest, BodyHandlers.ofString())
+        println response.body()
 
         then:
         response.statusCode() == HttpStatus.OK
         and:
         with(new JsonSlurper().parseText(response.body())) {
-            amount == '999.53'
+            value == BigDecimal.valueOf(999.53)
         }
     }
 
-    def "should patch scheduled transfer amount"() {
+    def "should accept delete request and return 204 HTTP status"() {
         given:
-        UUID transferId = createTransferForAccount UUID.randomUUID(), 'SCHEDULED'
-
-        def requestBodyBuilder = new JsonBuilder() {}
-        requestBodyBuilder {
-            amount '999.53'
-        }
-
-        def httpRequest = HttpRequest.newBuilder()
-                .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
-                .PUT(HttpRequest.BodyPublishers.ofString(requestBodyBuilder.toString()))
-                .build()
-
-        when:
-        def response = httpClient.send(httpRequest, BodyHandlers.ofString())
-
-        then:
-        response.statusCode() == HttpStatus.OK
-        and:
-        with(new JsonSlurper().parseText(response.body())) {
-            amount == '999.53'
-        }
-    }
-
-    def "should allow to delete failed transfer"() {
-        given:
-        UUID transferId = createTransferForAccount UUID.randomUUID(), 'FAILED'
+        UUID transferId = createTransferForAccount UUID.randomUUID(), TransferStatus.SCHEDULED
 
         def httpRequest = HttpRequest.newBuilder()
                 .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
@@ -233,41 +215,9 @@ class TransferApiSpec extends BaseTransferServiceSpec {
         response.statusCode() == HttpStatus.NO_CONTENT
     }
 
-    def "should allow to delete scheduled transfer"() {
+    def "should reject delete for SUCCESS transaction"() {
         given:
-        UUID transferId = createTransferForAccount UUID.randomUUID(), 'SCHEDULED'
-
-        def httpRequest = HttpRequest.newBuilder()
-                .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
-                .DELETE()
-                .build()
-
-        when:
-        def response = httpClient.send(httpRequest, BodyHandlers.ofString())
-
-        then:
-        response.statusCode() == HttpStatus.NO_CONTENT
-    }
-
-    def "should not allow to delete completed transfer"() {
-        given:
-        UUID transferId = createTransferForAccount UUID.randomUUID(), 'COMPLETED'
-
-        def httpRequest = HttpRequest.newBuilder()
-                .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
-                .DELETE()
-                .build()
-
-        when:
-        def response = httpClient.send(httpRequest, BodyHandlers.ofString())
-
-        then:
-        response.statusCode() == HttpStatus.FORBIDDEN
-    }
-
-    def "should not allow to delete pending transfer"() {
-        given:
-        UUID transferId = createTransferForAccount UUID.randomUUID(), 'COMPLETED'
+        UUID transferId = createTransferForAccount UUID.randomUUID(), TransferStatus.SUCCESS
 
         def httpRequest = HttpRequest.newBuilder()
                 .uri(getTransferApiUriBuilder().pathSegment(transferId).build())
@@ -286,7 +236,10 @@ class TransferApiSpec extends BaseTransferServiceSpec {
     }
 
 
-    private def createTransferForAccount(final UUID sourceAccountId, final String status = 'PENDING') {
-        return UUID.randomUUID()
+    private def createTransferForAccount(final UUID sourceAccountId, final TransferStatus status = TransferStatus.SUCCESS, ZonedDateTime scheduledAt = null) {
+        return jdbi.withExtension(TransferDao.class, {
+            it
+                    .insertTransfer(status, sourceAccountId, UUID.randomUUID(), BigDecimal.TEN, Currency.getInstance('GBP'), null, Instant.now(), scheduledAt)
+        })
     }
 }

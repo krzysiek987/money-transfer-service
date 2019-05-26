@@ -22,6 +22,7 @@ public class ServerConfig {
 
 	private static final String SERVER_CONFIG_SECTION = "server";
 
+	private String host;
 	private int port;
 
 	public static ServerConfig createFrom(Config config) {

@@ -1,38 +1,40 @@
-package pl.dorzak.transferservice.transfer;
+package pl.dorzak.transferservice.transfer.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Currency;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Transfer entity. Things like update or completion timestamp were intentionally omitted.
  */
-@Value
+@Data
 @Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Transfer {
 
-	@JsonIgnore
 	private UUID id;
-	@NonNull
-	private TransferStatus status;
-	@NonNull
+	@Builder.Default
+	private TransferStatus status = TransferStatus.SUCCESS;
+
 	private UUID sourceAccountId;
-	@NonNull
+
 	private UUID destinationAccountId;
-	@NonNull
-	private BigDecimal amount;
-	@NonNull
+
+	private BigDecimal value;
+
 	private Currency currency;
 
 	private String title;
-	@NonNull
+
 	private Instant createdAt;
 
-	private Instant scheduledAt;
+	private ZonedDateTime scheduledAt;
 
 }

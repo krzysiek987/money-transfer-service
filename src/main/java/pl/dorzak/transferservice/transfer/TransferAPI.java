@@ -1,40 +1,55 @@
 package pl.dorzak.transferservice.transfer;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
-import javax.sql.DataSource;
-import pl.dorzak.transferservice.RatpackChainVisitor;
-import pl.dorzak.transferservice.utils.HttpStatus;
-import ratpack.handling.Chain;
+import pl.dorzak.transferservice.transfer.model.Transfer;
+import pl.dorzak.transferservice.transfer.model.TransferStatus;
 
-public class TransferAPI implements RatpackChainVisitor {
+public interface TransferAPI {
 
-	public TransferAPI(DataSource dataSource) {
-		new TransferRepository(dataSource);
-	}
+	/**
+	 * @param accountId id of source account id that will be applied as filter
+	 * @return all transfers matching passed id
+	 */
+	Collection<Transfer> getBySourceAccountId(UUID accountId);
 
-	public void registerIn(final Chain chain) {
-		chain
-				.path("1.0/transfers", ctx ->
-						ctx.byMethod(method ->
-								method
-										.get(() -> ctx.getResponse().send())
-										.post(() -> ctx.getResponse()
-												.status(HttpStatus.CREATED).send())
-						)
-				)
-				.path("1.0/transfers/:transferId", ctx ->
-						ctx.byMethod(method ->
-								method
-										.get(() -> {
-											var transferId = UUID.fromString(
-													ctx.getPathTokens().get("transferId"));
-											ctx.getResponse().send();
-										})
-										.put(() -> ctx.getResponse().send())
-										.patch(() -> ctx.getResponse().send())
-										.delete(() -> ctx.getResponse()
-												.status(HttpStatus.NO_CONTENT).send())
-						)
-				);
-	}
+	/**
+	 * @return all Transfers that should be invoked according to scheduledAt
+	 */
+	List<Transfer> getAllScheduledToInvoke();
+
+	/**
+	 * @param id id of Transfer to be returned
+	 * @return {@link TransferApiResponse} with found transfer or resultCode indicating error
+	 */
+	TransferApiResponse findById(UUID id);
+
+	/**
+	 * @param transfer Transfer insert request
+	 * @return {@link TransferApiResponse} with found transfer or resultCode indicating error
+	 */
+	TransferApiResponse insert(Transfer transfer);
+
+	/**
+	 * @param transfer Transfer update request
+	 * @return {@link TransferApiResponse} with found transfer or resultCode indicating error
+	 */
+	TransferApiResponse update(Transfer transfer);
+
+	/**
+	 * Invokes Transfer by charging accounts and setting status
+	 */
+	TransferApiResponse invoke(Transfer transfer);
+
+	/**
+	 * @param id id of transfer to change status
+	 * @param status new status
+	 */
+	TransferApiResponse setStatus(UUID id, TransferStatus status);
+
+	/**
+	 * @param id id of Transfer to be deleted
+	 */
+	TransferApiResponse deleteById(UUID id);
 }

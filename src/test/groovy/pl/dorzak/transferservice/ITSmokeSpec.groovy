@@ -4,7 +4,7 @@ package pl.dorzak.transferservice
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse.BodyHandlers
 
-class TransferServiceSmokeSpec extends BaseTransferServiceSpec {
+class ITSmokeSpec extends BaseITSpec {
 
     def "should expose api on given port"() {
         given:
