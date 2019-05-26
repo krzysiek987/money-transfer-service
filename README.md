@@ -1,8 +1,5 @@
 # Transfer Service
 
-## Preface
-
-
 ## About
 Service exposing RESTful API for money transfer between accounts.
 
